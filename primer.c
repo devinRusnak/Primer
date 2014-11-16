@@ -13,8 +13,8 @@
 
 // structs
 typedef struct {
-   double time1;
-   double time2;
+   double point_t1;
+   double point_t2;
 } time_point;
 
 typedef struct {
@@ -25,20 +25,32 @@ typedef struct {
    time_t max_time;
 } stats_struct;
 
-/*
+/* PrimeTest - 
  *
+ * @param test_num -
+ * @param debug -  
+ * @return - 
  */
-int primeTest(int t)
-{
+int primeTest(long int test_num, int debug)
+{   
    int i;
-   int roof = sqrt(t);   
+   int roof = sqrt(test_num) + 1;   	// max number needed to test agasint
 
-   for( i = 0; i <= roof; i += 2 )
+   if(test_num == 1 || test_num == 3)	// trivial cases
+      return 1;
+
+   if(debug)
+      printf("\ndebug: roof is %d.\n", roof);
+
+   for( i = 1; i <= roof; i += 2 )	// check odd numbers from 3
    {
-      if( t % i != 0 ) 
-	return 1;
+      if(debug)
+	 printf("debug: i is %d.\n", i);
+
+      if( test_num % i == 0 )		// test
+	return 0;	// not prime
    }
-   return 0;
+   return 1;		// prime
 }
 
 
@@ -54,24 +66,26 @@ int main( int argc, char** argv )
    printf("***********************\n");
 
 // variables
-   int index = 0;
-   int cmd_line = 0;
-   int loop = 0;
-   int debug = 0;
-   int verbose = 0;
-   long int limit = 0;
-   FILE *fd_all, *fd_twin;
-   char *limit_char;
-   char *output_file;
-   char *twin_file;
-   time_point *t1, *t2;
-   stats_struct *stats;
+   int index = 0;			// flag
+   int cmd_line = 0;			// count
+   int loop = 1;			// flag
+   int debug = 0;			// flag
+   int verbose = 0;			// flag
+   int result = 0;			// number
+   int fresh = 1;			// flag
+   double temp_time = 0.0;		// number
+   long int test_num = 1;		// test_number
+   long int limit = 0;			// max_test_number
+   FILE *fd_all, *fd_twin;		// file discriptors 
+   char *limit_char, *output_file, *twin_file;	// strings
+   time_point *time1, *time2;		// struct
+   stats_struct *stats;			// struct
 
    memset(&limit_char, 0, sizeof(char)*32);
    memset(&output_file, 0, sizeof(char)*32);
    memset(&twin_file, 0, sizeof(char)*32);
-   memset(&t1, 0, sizeof(time_point));
-   memset(&t2, 0, sizeof(time_point));
+   memset(&time1, 0, sizeof(time_point));
+   memset(&time2, 0, sizeof(time_point));
    memset(&stats, 0, sizeof(stats_struct));
 
 // parse command line arguments
@@ -178,13 +192,35 @@ int main( int argc, char** argv )
       return(-2);	// terminate program
    }
   
-   printf("\nstarting...\n");
+   printf("starting...\n");
    
 // main loop
-   while( loop ) 
+   while( loop != 0 ) 
    {
+      if(fresh)
+	 time1->point_t1 = time(NULL);	// take time point
+      fresh = 0;
 
+      if(verbose | debug)
+	 printf("testing %lu...", test_num);
 
+      result = primeTest(test_num, debug);		// test call
+      if(verbose | debug)
+	 printf("%d\n", result); 
+
+      if(result)	// found a prime
+      {
+	 fresh = 1;
+	 time1->point_t2 = time(NULL);	// take time point
+	 temp_time = time1->point_t2 - time1->point_t1;
+	 if(verbose || debug)
+	    printf("time taken: %f\n", temp_time);
+      }
+
+      if(limit != 0 && limit == test_num)		// limit check
+  	 loop = 0;
+      else
+	 test_num++;	// increase test number
    }
 
 // print results
